@@ -49,7 +49,7 @@ async function createTicket() {
             return;
         }
 
-        await axios.post('http://127.0.0.1:3000/tickets', {
+        await axios.post('https://nuxt.itpq.ru:3001/tickets', {
             title: title.value,
             description: description.value,
             status_id: status.value,

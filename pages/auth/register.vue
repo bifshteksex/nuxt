@@ -57,7 +57,7 @@ const router = useRouter();
 
 async function register() {
     try {
-        await axios.post('http://127.0.0.1:3000/auth/register', {
+        await axios.post('https://nuxt.itpq.ru:3001/auth/register', {
             first_name: first_name.value,
             last_name: last_name.value,
             email: email.value,

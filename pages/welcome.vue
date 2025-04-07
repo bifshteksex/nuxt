@@ -49,7 +49,7 @@ onMounted(async () => {
       return;
     }
 
-    const response = await axios.get('http://127.0.0.1:3000/users/me', {
+    const response = await axios.get('https://nuxt.itpq.ru:3001/users/me', {
       headers: {
         Authorization: `Bearer ${token}`,
       },

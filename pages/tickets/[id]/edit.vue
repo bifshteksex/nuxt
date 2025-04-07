@@ -268,7 +268,7 @@ function formatDateTime(dateTimeString) {
 
 async function fetchTicket() {
     try {
-        const response = await axios.get(`http://127.0.0.1:3000/tickets/${route.params.id}`);
+        const response = await axios.get(`https://nuxt.itpq.ru:3001/tickets/${route.params.id}`);
         ticketInfo.value = response.data;
         selectedUser.value = response.data.assigned_to;
         selectedStatus.value = response.data.status_id;
@@ -279,7 +279,7 @@ async function fetchTicket() {
 
 async function fetchComments() {
     try {
-        const response = await axios.get(`http://127.0.0.1:3000/tickets/${route.params.id}/comments/`);
+        const response = await axios.get(`https://nuxt.itpq.ru:3001/tickets/${route.params.id}/comments/`);
         comments.value = response.data;
     } catch (error) {
         console.error(error);
@@ -289,7 +289,7 @@ async function fetchComments() {
 async function fetchUser(userId) {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://127.0.0.1:3000/users/${userId}`, {
+        const response = await axios.get(`https://nuxt.itpq.ru:3001/users/${userId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -304,7 +304,7 @@ async function fetchUser(userId) {
 async function fetchAllUsers() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://127.0.0.1:3000/users/`, {
+        const response = await axios.get(`https://nuxt.itpq.ru:3001/users/`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -318,7 +318,7 @@ async function fetchAllUsers() {
 
 async function fetchPriorities() {
     try {
-        const response = await axios.get('http://127.0.0.1:3000/priorities');
+        const response = await axios.get('https://nuxt.itpq.ru:3001/priorities');
         priorities.value = response.data;
         if (response.data.length > 0) {
             selectedPriority.value = response.data[0].id;
@@ -331,7 +331,7 @@ async function fetchPriorities() {
 async function fetchStatuses() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://127.0.0.1:3000/statuses', {
+        const response = await axios.get('https://nuxt.itpq.ru:3001/statuses', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -344,7 +344,7 @@ async function fetchStatuses() {
 
 async function saveTicket() {
     try {
-        await axios.put(`http://127.0.0.1:3000/tickets/${route.params.id}`, {
+        await axios.put(`https://nuxt.itpq.ru:3001/tickets/${route.params.id}`, {
             title: editingTitle.value,
             description: editingDescription.value,
             priority_id: selectedPriority.value,
@@ -369,7 +369,7 @@ async function saveTicket() {
 
 async function changeStatus(statusId) {
     try {
-        await axios.put(`http://127.0.0.1:3000/tickets/${route.params.id}`, {
+        await axios.put(`https://nuxt.itpq.ru:3001/tickets/${route.params.id}`, {
             status_id: statusId,
         });
         ticketInfo.value.status_id = statusId;
@@ -388,7 +388,7 @@ async function sendComment() {
 
         const token = localStorage.getItem('token');
         const response = await axios.post(
-            `http://127.0.0.1:3000/tickets/${route.params.id}/comments`,
+            `https://nuxt.itpq.ru:3001/tickets/${route.params.id}/comments`,
             {
                 userId: userId,
                 content: commentText.value,
@@ -432,7 +432,7 @@ onMounted(async () => {
             return;
         }
 
-        const response = await axios.get('http://127.0.0.1:3000/users/me', {
+        const response = await axios.get('https://nuxt.itpq.ru:3001/users/me', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

@@ -112,7 +112,7 @@ onMounted(async () => {
 async function fetchStatuses() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://127.0.0.1:3000/statuses', {
+        const response = await axios.get('https://nuxt.itpq.ru:3001/statuses', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -139,7 +139,7 @@ async function saveOrder() {
             return key;
         });
 
-        await axios.put('http://127.0.0.1:3000/statuses/position', { order }, {
+        await axios.put('https://nuxt.itpq.ru:3001/statuses/position', { order }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -162,7 +162,7 @@ function cancelEdit(status) {
 async function saveStatus(status) {
     try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://127.0.0.1:3000/statuses/${status.id}`, { name: status.editingName }, {
+        await axios.put(`https://nuxt.itpq.ru:3001/statuses/${status.id}`, { name: status.editingName }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -176,7 +176,7 @@ async function saveStatus(status) {
 async function deleteStatus(id) {
     try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://127.0.0.1:3000/statuses/${id}`, {
+        await axios.delete(`https://nuxt.itpq.ru:3001/statuses/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -209,7 +209,7 @@ function addNewStatus() {
 async function saveNewStatus() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post('http://127.0.0.1:3000/statuses', { name: newStatus.value.name }, {
+        const response = await axios.post('https://nuxt.itpq.ru:3001/statuses', { name: newStatus.value.name }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

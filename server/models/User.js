@@ -79,6 +79,20 @@ class User {
       return null;
     }
   }
+
+  static async delete(userId) {
+    try {
+      await pool.query('DELETE FROM user_roles WHERE user_id = $1', [userId]);
+
+      const query = 'DELETE FROM users WHERE id = $1';
+      const values = [userId];
+      await pool.query(query, values);
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
 }
 
 module.exports = User;

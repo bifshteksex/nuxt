@@ -119,7 +119,7 @@ onMounted(async () => {
 async function fetchRoles() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://127.0.0.1:3000/roles', {
+        const response = await axios.get('https://nuxt.itpq.ru:3001/roles', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -148,7 +148,7 @@ function cancelEdit(role) {
 async function saveRole(role) {
     try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://127.0.0.1:3000/roles/${role.id}`, { name: role.editingName, description: role.editingDescription }, {
+        await axios.put(`https://nuxt.itpq.ru:3001/roles/${role.id}`, { name: role.editingName, description: role.editingDescription }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -162,7 +162,7 @@ async function saveRole(role) {
 async function deleteRole(id) {
     try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://127.0.0.1:3000/roles/${id}`, {
+        await axios.delete(`https://nuxt.itpq.ru:3001/roles/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -198,7 +198,7 @@ function addNewRole() {
 async function saveNewRole() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post('http://127.0.0.1:3000/roles', { name: newRole.value.name, description: newRole.value.description }, {
+        const response = await axios.post('https://nuxt.itpq.ru:3001/roles', { name: newRole.value.name, description: newRole.value.description }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

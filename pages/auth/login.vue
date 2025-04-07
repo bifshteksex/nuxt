@@ -41,7 +41,7 @@ const router = useRouter();
 
 async function login() {
     try {
-        const response = await axios.post('http://127.0.0.1:3000/auth/login', { email: email.value, password: password.value });
+        const response = await axios.post('https://nuxt.itpq.ru:3001/auth/login', { email: email.value, password: password.value });
         localStorage.setItem('token', response.data.token);
         router.push('/welcome'); // Перенаправляем на страницу приветствия
     } catch (error) {

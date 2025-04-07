@@ -128,7 +128,7 @@ onMounted(async () => {
 async function fetchUsers() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://127.0.0.1:3000/users', {
+        const response = await axios.get('https://nuxt.itpq.ru:3001/users', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -150,7 +150,7 @@ async function fetchUsers() {
 async function fetchRoles() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://127.0.0.1:3000/roles', {
+        const response = await axios.get('https://nuxt.itpq.ru:3001/roles', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -175,7 +175,7 @@ function cancelEdit(user) {
 async function saveUser(user) {
     try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://127.0.0.1:3000/users/${user.id}`, {
+        await axios.put(`https://nuxt.itpq.ru:3001/users/${user.id}`, {
             first_name: user.editingFirstName,
             last_name: user.editingLastName,
             email: user.editingEmail,
@@ -194,7 +194,7 @@ async function saveUser(user) {
 async function deleteUser(id) {
     try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://127.0.0.1:3000/users/${id}`, {
+        await axios.delete(`https://nuxt.itpq.ru:3001/users/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
