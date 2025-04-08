@@ -1,11 +1,30 @@
 <template>
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 dark:text-gray-200">
-        <button @click="addNewRole"
-            class="mt-4 bg-[#6366f1] hover:bg-[#595ab4] text-white font-bold py-2 px-4 mb-4 rounded cursor-pointer">
-            + Добавить новую роль
-        </button>
+        <div class="flex justify-between items-center mb-4">
+            <button @click="addNewRole"
+                class="bg-[#6366f1] hover:bg-[#595ab4] text-white font-bold py-2 px-4 rounded cursor-pointer">
+                + Добавить новую роль
+            </button>
+        </div>
 
-        <div v-if="roles.length > 0" class="flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                Показать:
+                <select v-model="pageSize"
+                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                </select>
+                элементов
+            </div>
+
+            <input v-model="searchQuery" type="text"
+                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                placeholder="Поиск по всем полям..." />
+        </div>
+
+        <div v-if="paginatedRoles.length > 0" class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
                 <div class="p-1.5 min-w-full inline-block align-middle">
                     <div
@@ -51,7 +70,7 @@
                                         </button>
                                     </td>
                                 </tr>
-                                <tr :data-key="role.id" v-for="role in roles" :key="role.id">
+                                <tr :data-key="role.id" v-for="role in paginatedRoles" :key="role.id">
                                     <td
                                         class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
                                         <span v-if="!role.isEditing">{{ role.name }}</span>
@@ -95,6 +114,36 @@
                 </div>
             </div>
         </div>
+        <nav v-if="totalPages > 1" class="flex items-center justify-center gap-x-1 mt-5" aria-label="Pagination">
+            <button :disabled="currentPage === 1" @click="currentPage--" type="button"
+                class="cursor-pointer min-h-9.5 min-w-9.5 py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-sm rounded-lg text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10"
+                aria-label="Previous">
+                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                <span>Назад</span>
+            </button>
+            <div class="flex items-center gap-x-1">
+                <button v-for="page in visiblePages" :key="page" type="button"
+                    class="cursor-pointer min-h-9.5 min-w-9.5 flex justify-center items-center py-2 px-3 text-sm rounded-lg focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none"
+                    :class="{
+                        'bg-gray-200 text-gray-800 focus:bg-gray-300 dark:bg-[#6366f1] dark:text-white dark:focus:bg-neutral-500': page === currentPage,
+                        'text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10': page !== currentPage,
+                    }" @click="goToPage(page)" :aria-current="page === currentPage ? 'page' : null">{{ page }}</button>
+            </div>
+            <button :disabled="currentPage === totalPages" @click="currentPage++" type="button"
+                class="cursor-pointer min-h-9.5 min-w-9.5 py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-sm rounded-lg text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10"
+                aria-label="Next">
+                <span>Вперед</span>
+                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </button>
+        </nav>
         <button v-if="isAnyRoleEditing" @click="saveChanges"
             class="mt-4 bg-[#6366f1] hover:bg-[#595ab4] text-white font-bold py-2 px-4 rounded cursor-pointer">
             Сохранить
@@ -103,7 +152,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'nuxt/app';
 import axios from 'axios';
 
@@ -111,6 +160,10 @@ const roles = ref([]);
 const router = useRouter();
 const isAddingNew = ref(false);
 const newRole = ref({ name: '', description: '' });
+const searchQuery = ref('');
+const pageSize = ref(10); // Default page size
+const currentPage = ref(1);
+const paginationWindow = ref(3); // Number of page buttons to show around the current page
 
 onMounted(async () => {
     await fetchRoles();
@@ -130,6 +183,7 @@ async function fetchRoles() {
             editingName: role.name,
             editingDescription: role.description,
         }));
+        currentPage.value = 1; // Reset to first page after fetching/filtering
     } catch (error) {
         console.error(error);
     }
@@ -178,7 +232,7 @@ const isAnyRoleEditing = computed(() => {
 });
 
 async function saveChanges() {
-    const order = roles.value.map((role) => role.id); // Сохраняем текущий порядок
+    const order = roles.value.map((role) => role.id);
     const editedRoles = roles.value.filter((role) => role.isEditing);
     for (const role of editedRoles) {
         await saveRole(role);
@@ -218,4 +272,64 @@ function cancelNewRole() {
     newRole.value.name = '';
     newRole.value.description = '';
 }
+
+const filteredRoles = computed(() => {
+    const query = searchQuery.value.toLowerCase();
+    return roles.value.filter(role => {
+        return (
+            role.name.toLowerCase().includes(query) ||
+            role.description.toLowerCase().includes(query)
+        );
+    });
+});
+
+const totalPages = computed(() => {
+    return Math.ceil(filteredRoles.value.length / pageSize.value);
+});
+
+const paginatedRoles = computed(() => {
+    const startIndex = (currentPage.value - 1) * pageSize.value;
+    const endIndex = startIndex + parseInt(pageSize.value, 10);
+    return filteredRoles.value.slice(startIndex, endIndex);
+});
+
+const visiblePages = computed(() => {
+    const pages = [];
+    const startPage = Math.max(1, currentPage.value - Math.floor(paginationWindow.value / 2));
+    const endPage = Math.min(totalPages.value, currentPage.value + Math.floor(paginationWindow.value / 2));
+
+    if (startPage > 1) {
+        pages.push(1);
+        if (startPage > 2) {
+            pages.push('...');
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+    }
+
+    if (endPage < totalPages.value) {
+        if (endPage < totalPages.value - 1) {
+            pages.push('...');
+        }
+        pages.push(totalPages.value);
+    }
+
+    return pages;
+});
+
+function goToPage(page) {
+    if (typeof page === 'number') {
+        currentPage.value = page;
+    }
+}
+
+watch(searchQuery, () => {
+    currentPage.value = 1; // Reset page on search
+});
+
+watch(pageSize, () => {
+    currentPage.value = 1; // Reset page on page size change
+});
 </script>

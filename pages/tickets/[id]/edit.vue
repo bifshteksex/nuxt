@@ -32,7 +32,13 @@
                                 {{ priority.name }}
                             </option>
                         </select>
-                        <span v-else>{{ getPriorityName(ticketInfo.priority_id) }}</span>
+                        <span v-else :class="{
+                            'text-green-400': ticketInfo.priority_id === 1,
+                            'text-yellow-400': ticketInfo.priority_id === 2,
+                            'text-red-400': ticketInfo.priority_id === 3,
+                        }">
+                            {{ getPriorityName(ticketInfo.priority_id) }}
+                        </span>
                     </div>
 
                     <div class="flex items-center">
@@ -272,6 +278,7 @@ async function fetchTicket() {
         ticketInfo.value = response.data;
         selectedUser.value = response.data.assigned_to;
         selectedStatus.value = response.data.status_id;
+        selectedPriority.value = response.data.priority_id;
     } catch (error) {
         console.error(error);
     }
@@ -320,9 +327,6 @@ async function fetchPriorities() {
     try {
         const response = await axios.get('https://nuxt.itpq.ru:3001/priorities');
         priorities.value = response.data;
-        if (response.data.length > 0) {
-            selectedPriority.value = response.data[0].id;
-        }
     } catch (error) {
         console.error(error);
     }
