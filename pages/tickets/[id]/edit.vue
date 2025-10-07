@@ -121,8 +121,8 @@
             <ul v-if="comments.length > 0 && !isEditing" class="space-y-5 mt-10">
                 <li v-for="comment in comments" :key="comment.id" class="max-w-lg flex gap-x-2 sm:gap-x-4 me-11">
                     <img class="inline-block size-9 rounded-full"
-                        src="https://images.unsplash.com/photo-1541101767792-f9b2b1c4f127?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&&auto=format&fit=facearea&facepad=3&w=300&h=300&q=80"
-                        alt="Avatar">
+                        src=""
+                        alt="Картиночка">
 
                     <!-- Card -->
                     <div
