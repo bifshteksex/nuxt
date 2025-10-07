@@ -47,14 +47,14 @@
                             <div class="ml-3">
                                 <div class="flex items-center gap-x-5">
                                     <div class="flex flex-col items-end">
-                                        <p class="text-gray-200 font-medium">{{ userInfo.first_name + ' ' + userInfo.last_name }}</p>
-                                        <button class="text-red-400 cursor-pointer hover:underline" @click="logout">Выйти</button>
+                                        <p class="text-gray-200 font-medium">{{ userInfo.first_name + ' ' +
+                                            userInfo.last_name }}</p>
+                                        <button class="text-red-400 cursor-pointer hover:underline"
+                                            @click="logout">Выйти</button>
                                     </div>
                                     <div class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm"
                                         id="user-menu-button" aria-expanded="menuOpen" aria-haspopup="true">
-                                        <img class="size-8 rounded-full"
-                                            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                            alt="">
+                                        <img class="size-8 rounded-full" src="" alt="Картинка">
                                     </div>
                                 </div>
                             </div>
@@ -101,7 +101,7 @@ onMounted(async () => {
             return;
         }
 
-        const response = await axios.get('https://nuxt.itpq.ru:3001/users/me', {
+        const response = await axios.get('/api/users/me', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -115,8 +115,8 @@ onMounted(async () => {
 });
 
 async function logout() {
-  localStorage.removeItem('token');
-  router.push('/auth/login');
+    localStorage.removeItem('token');
+    router.push('/auth/login');
 }
 
 const isAdmin = computed(() => {

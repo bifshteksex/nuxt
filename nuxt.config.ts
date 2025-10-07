@@ -3,7 +3,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-11-01',
+  compatibilityDate: '2025-11-11',
   routeRules: {
     '/': { redirect: '/welcome' },
   },

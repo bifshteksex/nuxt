@@ -24,7 +24,8 @@
                 placeholder="Поиск по всем полям..." />
         </div>
 
-        <div v-if="paginatedStatuses.length > 0" class="flex flex-col">
+        <!-- Изменено условие: показываем таблицу если есть данные ИЛИ идет добавление -->
+        <div v-if="paginatedStatuses.length > 0 || isAddingNew" class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
                 <div class="p-1.5 min-w-full inline-block align-middle">
                     <div
@@ -42,7 +43,8 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody id="dragg" class="divide-y divide-gray-200 dark:divide-neutral-700">
+                            <tbody ref="draggableTable" id="dragg"
+                                class="divide-y divide-gray-200 dark:divide-neutral-700">
                                 <tr v-if="isAddingNew">
                                     <td
                                         class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
@@ -95,6 +97,13 @@
                 </div>
             </div>
         </div>
+
+        <!-- Empty state: показывается когда нет данных и не идет добавление -->
+        <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
+            <p class="text-lg mb-2">Статусов пока нет</p>
+            <p class="text-sm">Нажмите кнопку "Добавить новый статус" чтобы создать первый</p>
+        </div>
+
         <nav v-if="totalPages > 1" class="flex items-center justify-center gap-x-1 mt-5" aria-label="Pagination">
             <button :disabled="currentPage === 1" @click="currentPage--" type="button"
                 class="cursor-pointer min-h-9.5 min-w-9.5 py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-sm rounded-lg text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10"
@@ -133,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'nuxt/app';
 import axios from 'axios';
 import Sortable from 'sortablejs';
@@ -144,15 +153,18 @@ const orderChanged = ref(false);
 const isAddingNew = ref(false);
 const newStatus = ref({ name: '' });
 const searchQuery = ref('');
-const pageSize = ref(10); // Default page size
+const pageSize = ref(10);
 const currentPage = ref(1);
-const paginationWindow = ref(3); // Number of page buttons to show around the current page
+const paginationWindow = ref(3);
+const draggableTable = ref(null);
+
 
 onMounted(async () => {
     await fetchStatuses();
-    if (process.client) {
-        const sortable = document.querySelector('#dragg');
-        new Sortable(sortable, {
+    await nextTick();
+
+    if (process.client && draggableTable.value) {
+        new Sortable(draggableTable.value, {
             animation: 150,
             dragClass: 'rounded-none!',
             onEnd: () => {
@@ -165,7 +177,7 @@ onMounted(async () => {
 async function fetchStatuses() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://nuxt.itpq.ru:3001/statuses', {
+        const response = await axios.get('/api/statuses', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -176,7 +188,7 @@ async function fetchStatuses() {
             isEditing: false,
             editingName: status.name,
         }));
-        currentPage.value = 1; // Reset to first page after fetching/filtering
+        currentPage.value = 1;
     } catch (error) {
         console.error(error);
     }
@@ -185,15 +197,18 @@ async function fetchStatuses() {
 async function saveOrder() {
     try {
         const token = localStorage.getItem('token');
-        const dragg = document.querySelector('#dragg');
+        const dragg = draggableTable.value;
+        if (!dragg) return;
+
         const rows = dragg.querySelectorAll('tr');
 
         const order = Array.from(rows).map((row) => {
             const key = parseInt(row.dataset.key, 10);
             return key;
-        });
+        }).filter(key => !isNaN(key));
 
-        await axios.put('https://nuxt.itpq.ru:3001/statuses/position', { order }, {
+
+        await axios.put('/api/statuses/position', { order }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -216,7 +231,7 @@ function cancelEdit(status) {
 async function saveStatus(status) {
     try {
         const token = localStorage.getItem('token');
-        await axios.put(`https://nuxt.itpq.ru:3001/statuses/${status.id}`, { name: status.editingName }, {
+        await axios.put(`/api/statuses/${status.id}`, { name: status.editingName }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -230,7 +245,7 @@ async function saveStatus(status) {
 async function deleteStatus(id) {
     try {
         const token = localStorage.getItem('token');
-        await axios.delete(`https://nuxt.itpq.ru:3001/statuses/${id}`, {
+        await axios.delete(`/api/statuses/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -263,7 +278,7 @@ function addNewStatus() {
 async function saveNewStatus() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post('https://nuxt.itpq.ru:3001/statuses', { name: newStatus.value.name }, {
+        const response = await axios.post('/api/statuses', { name: newStatus.value.name }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -334,10 +349,10 @@ function goToPage(page) {
 }
 
 watch(searchQuery, () => {
-    currentPage.value = 1; // Reset page on search
+    currentPage.value = 1;
 });
 
 watch(pageSize, () => {
-    currentPage.value = 1; // Reset page on page size change
+    currentPage.value = 1;
 });
 </script>

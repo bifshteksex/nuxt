@@ -22,16 +22,29 @@ async function initializeDatabase() {
         first_name VARCHAR(100),
         last_name VARCHAR(100),
         email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(100) NOT NULL
+        password VARCHAR(100) NOT NULL,
+        avatar VARCHAR(255)
       );
     `;
     await client.query(createUsersTableQuery);
     console.log("Таблица users создана или уже существует.");
 
+    // Проверка и создание таблицы user_roles
+    const createUserRolesTableQuery = `
+      CREATE TABLE IF NOT EXISTS user_roles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        role_id INTEGER REFERENCES roles(id)
+      );
+    `;
+    await client.query(createUserRolesTableQuery);
+    console.log("Таблица user_roles создана или уже существует.");
+
     // Проверка и создание таблицы comments
     const createCommentsTableQuery = `
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
+        ticket_id INTEGER REFERENCES tickets(id),
         user_id INTEGER REFERENCES users(id),
         content TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,9 +53,9 @@ async function initializeDatabase() {
     await client.query(createCommentsTableQuery);
     console.log("Таблица comments создана или уже существует.");
 
-    // Проверка и создание таблицы priorities
+    // Проверка и создание таблицы priority
     const createPrioritiesTableQuery = `
-      CREATE TABLE IF NOT EXISTS priorities (
+      CREATE TABLE IF NOT EXISTS priority (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL
       );
@@ -74,12 +87,14 @@ async function initializeDatabase() {
     const createTicketsTableQuery = `
       CREATE TABLE IF NOT EXISTS tickets (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        priority_id INTEGER REFERENCES priorities(id),
-        status_id INTEGER REFERENCES statuses(id),
         title VARCHAR(100) NOT NULL,
-        description TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        description TEXT,
+        status_id INTEGER REFERENCES statuses(id),
+        priority_id INTEGER REFERENCES priorities(id),
+        category VARCHAR(100),
+        created_by INTEGER REFERENCES users(id),
+        assigned_to INTEGER REFERENCES users(id),
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
     await client.query(createTicketsTableQuery);

@@ -1,6 +1,5 @@
 <template>
-    <div
-        class="flex items-center justify-center min-h-screen light:bg-gray-100 transition-colors duration-300">
+    <div class="flex items-center justify-center min-h-screen light:bg-gray-100 transition-colors duration-300">
         <div class="light:bg-white dark:bg-gray-800 p-8 rounded shadow-md w-96 transition-colors duration-300">
             <h2 class="light:text-gray-800 dark:text-white text-2xl font-semibold mb-4 transition-colors duration-300">
                 Регистрация</h2>
@@ -57,7 +56,7 @@ const router = useRouter();
 
 async function register() {
     try {
-        await axios.post('https://nuxt.itpq.ru:3001/auth/register', {
+        await axios.post('/api/auth/register', {
             first_name: first_name.value,
             last_name: last_name.value,
             email: email.value,

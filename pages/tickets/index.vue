@@ -133,7 +133,7 @@ onMounted(async () => {
             return;
         }
 
-        const response = await axios.get('https://nuxt.itpq.ru:3001/users/me', {
+        const response = await axios.get('/api/users/me', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -151,7 +151,7 @@ onMounted(async () => {
 async function fetchTickets() {
     loading.value = true;
     try {
-        let url = 'https://nuxt.itpq.ru:3001/tickets';
+        let url = '/api/tickets';
         let params = {};
 
         if (selectedStatus.value) {
@@ -176,7 +176,7 @@ async function fetchTickets() {
 async function fetchStatuses() {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://nuxt.itpq.ru:3001/statuses', {
+        const response = await axios.get('/api/statuses', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -189,7 +189,7 @@ async function fetchStatuses() {
 
 async function deleteTicket(id) {
     try {
-        await axios.delete(`https://nuxt.itpq.ru:3001/tickets/${id}`);
+        await axios.delete(`/api/tickets/${id}`);
         await fetchTickets();
     } catch (error) {
         console.error(error);

@@ -49,7 +49,7 @@ async function createTicket() {
             return;
         }
 
-        await axios.post('https://nuxt.itpq.ru:3001/tickets', {
+        await axios.post('/api/tickets', {
             title: title.value,
             description: description.value,
             status_id: status.value,

@@ -1,6 +1,5 @@
 <template>
-    <div
-        class="flex items-center justify-center min-h-screen light:bg-gray-100 transition-colors duration-300">
+    <div class="flex items-center justify-center min-h-screen light:bg-gray-100 transition-colors duration-300">
         <div class="light:bg-white dark:bg-gray-800 p-8 rounded shadow-md w-96 transition-colors duration-300">
             <h2 class="light:text-gray-800 dark:text-white text-2xl font-semibold mb-4 transition-colors duration-300">
                 Авторизация</h2>
@@ -41,7 +40,8 @@ const router = useRouter();
 
 async function login() {
     try {
-        const response = await axios.post('https://nuxt.itpq.ru:3001/auth/login', { email: email.value, password: password.value });
+        const response = await axios.post('/api/auth/login', { email: email.value, password: password.value });
+        console.log(response.data)
         localStorage.setItem('token', response.data.token);
         router.push('/welcome'); // Перенаправляем на страницу приветствия
     } catch (error) {
