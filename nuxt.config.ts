@@ -8,7 +8,7 @@ export default defineNuxtConfig({
     '/': { redirect: '/welcome' },
   },
   devtools: { enabled: true },
-  modules: ['@nuxt/icon', '@nuxt/image', '@nuxt/ui'],
+  modules: ['@nuxt/image', '@nuxt/ui'],
   css: ['~/assets/css/main.css'],
   vite: {
     plugins: [
