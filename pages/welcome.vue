@@ -26,8 +26,7 @@
       </div>
       <div class="relative mt-16 h-80 lg:mt-8">
         <img class="absolute top-0 left-0 w-[57rem] max-w-none rounded-md bg-white/5 ring-1 ring-white/10"
-          src="../assets/img/welcome.png"
-          alt="App screenshot" width="1824" height="1080">
+          src="../assets/img/welcome.png" alt="App screenshot" width="1824" height="1080">
       </div>
     </div>
   </div>
@@ -44,11 +43,6 @@ const router = useRouter();
 onMounted(async () => {
   try {
     const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/auth/login');
-      return;
-    }
-
     const response = await axios.get('/api/users/me', {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -67,7 +67,8 @@ async function initializeDatabase() {
     const createRolesTableQuery = `
       CREATE TABLE IF NOT EXISTS roles (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL
+        name VARCHAR(100) NOT NULL,
+        description TEXT
       );
     `;
     await client.query(createRolesTableQuery);
@@ -77,7 +78,9 @@ async function initializeDatabase() {
     const createStatusesTableQuery = `
       CREATE TABLE IF NOT EXISTS statuses (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL
+        name VARCHAR(100) NOT NULL,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        position VARCHAR(100)
       );
     `;
     await client.query(createStatusesTableQuery);
@@ -99,6 +102,20 @@ async function initializeDatabase() {
     `;
     await client.query(createTicketsTableQuery);
     console.log("Таблица tickets создана или уже существует.");
+
+    // Проверка и создание таблицы status_transitions
+    const createTransitionsTableQuery = `
+      CREATE TABLE IF NOT EXISTS status_transitions (
+        id SERIAL PRIMARY KEY,
+        from_status_id INTEGER REFERENCES statuses(id),
+        to_status_id INTEGER REFERENCES statuses(id),
+        required_role VARCHAR(50) NOT NULL,
+        requires_assignment BOOLEAN DEFAULT FALSE,
+        UNIQUE(from_status_id, to_status_id, required_role)
+      );
+    `;
+    await client.query(createTransitionsTableQuery);
+    console.log("Таблица status_transitions создана или уже существует.");
 
     client.release();
   } catch (err) {

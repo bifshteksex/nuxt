@@ -276,14 +276,11 @@ function reorderUsers(order) {
     users.value.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 }
 
-function getRoleNames(roleIds) {
-    if (!roleIds || roleIds.length === 0) {
+function getRoleNames(roleNames) {
+    if (!roleNames || roleNames.length === 0) {
         return 'Нет ролей';
     }
-    return roleIds.map(roleId => {
-        const role = roles.value.find(r => r.id === roleId);
-        return role ? role.name : 'Неизвестная роль';
-    }).join(', ');
+    return Array.isArray(roleNames) ? roleNames.join(', ') : roleNames;
 }
 
 const filteredUsers = computed(() => {

@@ -120,6 +120,6 @@ async function logout() {
 }
 
 const isAdmin = computed(() => {
-    return userRoles.value.includes(7);
+    return userRoles.value.includes('admin');
 });
 </script>

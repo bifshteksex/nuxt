@@ -74,22 +74,11 @@
                         formatDateTime(ticketInfo.updated_at) }}
                     </p>
 
-                    <div v-if="isWorker && ticketInfo.status_id !== 3" class="flex items-center gap-x-5 mt-5">
-                        <button v-if="ticketInfo.status_id !== 2"
+                    <div v-if="isWorker" class="flex items-center gap-x-5 mt-5">
+                        <button v-for="transition in availableTransitions" :key="transition.to_status_id"
                             class="cursor-pointer bg-[#6366f1] hover:bg-[#595ab4] text-white font-bold py-2 px-4 rounded"
-                            @click="changeStatus(2)">
-                            Взять в работу
-                        </button>
-                        <button v-else
-                            class="cursor-pointer bg-[#6366f1] hover:bg-[#595ab4] text-white font-bold py-2 px-4 rounded"
-                            @click="changeStatus(3)">
-                            Завершить
-                        </button>
-
-                        <button v-if="ticketInfo.status_id !== 4"
-                            class="cursor-pointer text-[#6366f1] hover:text-[#595ab4] font-bold py-2 px-4 rounded"
-                            @click="changeStatus(4)">
-                            Отложить
+                            @click="changeStatus(transition.to_status_id)">
+                            {{ getTransitionLabel(transition.code) }}
                         </button>
                     </div>
                 </div>
@@ -98,13 +87,25 @@
                         <button v-if="!isEditing"
                             class="text-white mr-2 cursor-pointer rounded-full hover:bg-[#99a1af66] w-10 h-10 flex items-center justify-center"
                             @click="editTicket(id)">
-                            <Icon name="mdi:lead-pencil" size="2em"
-                                class="light:text-gray-800 dark:text-white transition-colors duration-300" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="light:text-gray-800 dark:text-white transition-colors duration-300">
+                                <path
+                                    d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                            </svg>
                         </button>
                         <button v-else @click="saveTicket"
                             class="text-white mr-2 cursor-pointer rounded-full hover:bg-[#99a1af66] w-10 h-10 flex items-center justify-center">
-                            <Icon name="mdi:content-save-check" size="2em"
-                                class="light:text-gray-800 dark:text-white transition-colors duration-300" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="light:text-gray-800 dark:text-white transition-colors duration-300">
+                                <path
+                                    d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                                <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
+                                <path d="M7 3v4a1 1 0 0 0 1 1h7" />
+                            </svg>
                         </button>
                     </div>
 
@@ -168,12 +169,11 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'nuxt/app';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
 
-const ticketInfo = ref([]);
+const { $api } = useNuxtApp();
 
+const ticketInfo = ref({});
 const commentText = ref('');
-
 const router = useRouter();
 const route = useRoute();
 
@@ -188,7 +188,7 @@ const selectedStatus = ref(null);
 const users = ref([]);
 const selectedUser = ref(null);
 
-const userRoles = ref('');
+const userRoles = ref([]);
 
 // Режим редактирования
 const isEditing = ref(false);
@@ -197,6 +197,7 @@ const editingDescription = ref('');
 
 const createdByName = ref('Не назначен');
 const assignedToName = ref('Не назначен');
+const availableTransitions = ref([]);
 
 const isCommentEmpty = computed(() => {
     return !commentText.value.trim();
@@ -277,81 +278,65 @@ function formatDateTime(dateTimeString) {
 
 async function fetchTicket() {
     try {
-        const response = await axios.get(`/api/tickets/${route.params.id}`);
+        const response = await $api.get(`/tickets/${route.params.id}`);
         ticketInfo.value = response.data;
         selectedUser.value = response.data.assigned_to;
         selectedStatus.value = response.data.status_id;
         selectedPriority.value = response.data.priority_id;
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки тикета:', error);
     }
 }
 
 async function fetchComments() {
     try {
-        const response = await axios.get(`/api/tickets/${route.params.id}/comments/`);
+        const response = await $api.get(`/tickets/${route.params.id}/comments/`);
         comments.value = response.data;
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки комментариев:', error);
     }
 }
 
 async function fetchUser(userId) {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`/api/users/${userId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await $api.get(`/users/${userId}`);
         return response.data.first_name + ' ' + response.data.last_name;
     } catch (error) {
-        console.error(error);
-        return 'Неизвестный пользователь'; // Возвращаем значение по умолчанию
+        console.error('Ошибка загрузки пользователя:', error);
+        return 'Неизвестный пользователь';
     }
 }
 
 async function fetchAllUsers() {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`/api/users/`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await $api.get(`/users/`);
         users.value = response.data;
     } catch (error) {
-        console.error(error);
-        return 'Неизвестный пользователь'; // Возвращаем значение по умолчанию
+        console.error('Ошибка загрузки пользователей:', error);
     }
 }
 
 async function fetchPriorities() {
     try {
-        const response = await axios.get('/api/priorities');
+        const response = await $api.get('/priorities');
         priorities.value = response.data;
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки приоритетов:', error);
     }
 }
 
 async function fetchStatuses() {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/statuses', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await $api.get('/statuses');
         statuses.value = response.data.sort((a, b) => a.position - b.position);
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки статусов:', error);
     }
 }
 
 async function saveTicket() {
     try {
-        await axios.put(`/api/tickets/${route.params.id}`, {
+        await $api.put(`/tickets/${route.params.id}`, {
             title: editingTitle.value,
             description: editingDescription.value,
             priority_id: selectedPriority.value,
@@ -370,18 +355,26 @@ async function saveTicket() {
 
         isEditing.value = false;
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка сохранения тикета:', error);
+        if (error.response?.status === 403) {
+            alert(error.response.data.error);
+        }
     }
 }
 
-async function changeStatus(statusId) {
+async function changeStatus(toStatusId) {
     try {
-        await axios.put(`/api/tickets/${route.params.id}`, {
-            status_id: statusId,
+        await $api.put(`/tickets/${route.params.id}`, {
+            status_id: toStatusId
         });
-        ticketInfo.value.status_id = statusId;
+
+        ticketInfo.value.status_id = toStatusId;
+        await fetchAvailableTransitions();
     } catch (error) {
-        console.error(error);
+        if (error.response?.status === 403) {
+            alert(error.response.data.error);
+        }
+        console.error('Ошибка смены статуса:', error);
     }
 }
 
@@ -393,27 +386,20 @@ async function sendComment() {
             return;
         }
 
-        const token = localStorage.getItem('token');
-        const response = await axios.post(
-            `/api/tickets/${route.params.id}/comments`,
+        const response = await $api.post(
+            `/tickets/${route.params.id}/comments`,
             {
                 userId: userId,
                 content: commentText.value,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
             }
         );
 
         comments.value.push(response.data);
         commentText.value = '';
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка отправки комментария:', error);
     }
 }
-
 
 function getStatusPosition(statusId) {
     const status = statuses.value.find((s) => s.id === statusId);
@@ -421,32 +407,45 @@ function getStatusPosition(statusId) {
 }
 
 const isAdmin = computed(() => {
-    return userRoles.value.includes(7);
+    return userRoles.value.includes('admin');
 });
 
 const isRoute = computed(() => {
-    return userRoles.value.includes(8);
+    return userRoles.value.includes('route');
 });
 
 const isWorker = computed(() => {
-    return userRoles.value.includes(29);
+    return userRoles.value.includes('worker');
 });
+
+async function fetchAvailableTransitions() {
+    try {
+        const response = await $api.get(`/tickets/${route.params.id}/transitions`);
+        availableTransitions.value = response.data;
+        console.log('Доступные переходы:', availableTransitions.value);
+    } catch (error) {
+        console.error('Ошибка загрузки доступных переходов:', error);
+    }
+}
+
+function getTransitionLabel(statusCode) {
+    const labels = {
+        'IN_PROGRESS': 'Взять в работу',
+        'COMPLETED': 'Завершить',
+        'ON_HOLD': 'Отложить',
+        'NEW': 'Вернуть в новые'
+    };
+    return labels[statusCode] || 'Изменить статус';
+}
 
 onMounted(async () => {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            return;
-        }
-
-        const response = await axios.get('/api/users/me', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await $api.get('/users/me');
         userRoles.value = response.data.roles;
+        console.log('Роли пользователя:', userRoles.value);
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки данных пользователя:', error);
+        return;
     }
 
     await fetchTicket();
@@ -454,6 +453,7 @@ onMounted(async () => {
     await fetchPriorities();
     await fetchAllUsers();
     await fetchStatuses();
+    await fetchAvailableTransitions();
 
     if (ticketInfo.value.created_by) {
         await fetchCreatedByName(ticketInfo.value.created_by);

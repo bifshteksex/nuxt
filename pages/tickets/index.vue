@@ -69,7 +69,8 @@
 
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="light:text-gray-800 dark:text-white transition-colors duration-300">
+                                stroke-linejoin="round"
+                                class="light:text-gray-800 dark:text-white transition-colors duration-300">
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                                 <path d="M3 6h18" />
                                 <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -118,13 +119,14 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
+
+const { $api } = useNuxtApp();
 
 const tickets = ref([]);
 const statuses = ref([]);
 const loading = ref(true);
 const router = useRouter();
-const userRoles = ref('');
+const userRoles = ref([]);
 const selectedStatus = ref(null);
 const userId = ref(null);
 const searchQuery = ref('');
@@ -134,19 +136,11 @@ const paginationWindow = ref(3); // Number of page buttons to show around the cu
 
 onMounted(async () => {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            return;
-        }
-
-        const response = await axios.get('/api/users/me', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await $api.get('/users/me');
         userRoles.value = response.data.roles;
+        console.log('Роли пользователя:', userRoles.value);
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки данных пользователя:', error);
     }
 
     userId.value = getUserIdFromToken();
@@ -157,7 +151,6 @@ onMounted(async () => {
 async function fetchTickets() {
     loading.value = true;
     try {
-        let url = '/api/tickets';
         let params = {};
 
         if (selectedStatus.value) {
@@ -165,15 +158,14 @@ async function fetchTickets() {
         }
 
         if (!isAdmin.value && !isRoute.value) {
-            params.assigned_to = userId.value;
+            params.user_id = userId.value;
         }
 
-        const response = await axios.get(url, { params: params });
+        const response = await $api.get('/tickets', { params });
         tickets.value = response.data;
-
-        currentPage.value = 1; // Reset to first page after fetching/filtering
+        currentPage.value = 1;
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки тикетов:', error);
     } finally {
         loading.value = false;
     }
@@ -181,24 +173,19 @@ async function fetchTickets() {
 
 async function fetchStatuses() {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/statuses', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await $api.get('/statuses');
         statuses.value = response.data.sort((a, b) => a.position - b.position);
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка загрузки статусов:', error);
     }
 }
 
 async function deleteTicket(id) {
     try {
-        await axios.delete(`/api/tickets/${id}`);
+        await $api.delete(`/tickets/${id}`);
         await fetchTickets();
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка удаления тикета:', error);
     }
 }
 
@@ -211,11 +198,11 @@ function editTicket(id) {
 }
 
 const isAdmin = computed(() => {
-    return userRoles.value.includes(7);
+    return userRoles.value.includes('admin');
 });
 
 const isRoute = computed(() => {
-    return userRoles.value.includes(8);
+    return userRoles.value.includes('route');
 });
 
 function getUserIdFromToken() {

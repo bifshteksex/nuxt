@@ -1,5 +1,5 @@
 <template>
-  <div class="light:bg-white dark:bg-gray-900 transition-colors duration-300 min-h-screen"
+  <div class="light:bg-white dark:bg-gray-900 transition-colors duration-300 min-h-screen pb-10"
     :class="{ 'gradient-background': isAuthPage }">
     <Header v-if="!isAuthPage" />
     <NuxtPage />
@@ -10,8 +10,18 @@
 <script setup>
 import Header from '@/components/Header.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
-import { useRoute } from 'nuxt/app';
-import { computed } from 'vue';
+import { useRoute, useRouter } from 'nuxt/app';
+import { onMounted, computed } from 'vue';
+
+const router = useRouter();
+
+onMounted(async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/auth/login');
+    return;
+  }
+});
 
 const route = useRoute();
 

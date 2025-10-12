@@ -25,13 +25,13 @@
 import { ref } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
+
+const { $api } = useNuxtApp();
 
 const title = ref('');
 const description = ref('');
 const status = ref(1);
 const router = useRouter();
-
 const titleError = ref('');
 
 async function createTicket() {
@@ -49,7 +49,7 @@ async function createTicket() {
             return;
         }
 
-        await axios.post('/api/tickets', {
+        await $api.post('/tickets', {
             title: title.value,
             description: description.value,
             status_id: status.value,
@@ -57,7 +57,7 @@ async function createTicket() {
         });
         router.push('/tickets');
     } catch (error) {
-        console.error(error);
+        console.error('Ошибка создания тикета:', error);
     }
 }
 
