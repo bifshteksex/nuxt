@@ -1,16 +1,47 @@
+// server/utils/db.ts
 import { Pool } from "pg";
+
+// Проверяем наличие переменных окружения
+const requiredEnvVars = [
+  "PGUSER",
+  "PGHOST",
+  "PGDATABASE",
+  "PGPASSWORD",
+  "PGPORT",
+];
+const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error("❌ Отсутствуют переменные окружения:", missingVars.join(", "));
+  throw new Error(`Missing environment variables: ${missingVars.join(", ")}`);
+}
 
 const pool = new Pool({
   user: process.env.PGUSER,
   host: process.env.PGHOST,
   database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: parseInt(process.env.PGPORT || "5432"),
+  password: String(process.env.PGPASSWORD), // Явно приводим к строке
+  port: parseInt(process.env.PGPORT || "5432", 10),
+  max: 20, // Максимум соединений в пуле
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Тест подключения
+pool.on("connect", () => {
+  console.log("✅ Подключение к PostgreSQL установлено");
+});
+
+pool.on("error", (err) => {
+  console.error("❌ Неожиданная ошибка PostgreSQL:", err);
 });
 
 export async function initializeDatabase() {
+  let client;
   try {
-    const client = await pool.connect();
+    console.log("📊 Подключение к базе данных...");
+    client = await pool.connect();
+    console.log("✅ Успешно подключено к PostgreSQL");
 
     // Таблица users
     await client.query(`
@@ -101,10 +132,14 @@ export async function initializeDatabase() {
       );
     `);
 
-    client.release();
-    console.log("✅ База данных инициализирована успешно");
+    console.log("✅ Все таблицы инициализированы успешно");
   } catch (err) {
     console.error("❌ Ошибка инициализации базы данных:", err);
+    throw err;
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
 
